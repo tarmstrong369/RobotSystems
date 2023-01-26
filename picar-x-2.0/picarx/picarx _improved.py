@@ -3,7 +3,6 @@ import os
 import logging
 import math
 import atexit
-import filedb
 import timer
 from datetime import datetime, timedelta
 
@@ -15,6 +14,7 @@ logging.debug("There's a problem :(")
 try:
     from robot_hat import *
     from robot_hat import reset_mcu
+    import filedb
     reset_mcu ()
     time.sleep (0.01)
 except ImportError:
