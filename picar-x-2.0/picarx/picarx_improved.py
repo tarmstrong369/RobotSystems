@@ -3,8 +3,7 @@ import os
 import logging
 import math
 import atexit
-import timer
-from datetime import datetime, timedelta
+
 
 logging_format = "%( asctime)s: %( message)s"
 #logging.basicConfig(format=logging_format , level=logging.INFO ,datefmt ="%H:%M:%S")
@@ -12,14 +11,14 @@ logging.getLogger ().setLevel(logging.DEBUG)
 logging.debug("There's a problem :(")
 
 try:
-    from robot_hat import *
+    from robot_hat import Pin, PWM, Servo, fileDB
     from robot_hat import reset_mcu
     import filedb
     reset_mcu ()
     time.sleep (0.01)
 except ImportError:
     print("This computer does not appear to be a PiCar -X system (robot_hat is not present). Shadowing hardware calls with substitute functions ")
-    from sim_robot_hat import *
+    from sim_robot_hat import Pin, PWM, Servo, fileDB
 
 # user and User home directory
 User = os.popen('echo ${SUDO_USER:-$LOGNAME}').readline().strip()
@@ -48,7 +47,7 @@ class Picarx(object):
                 ):
 
         # config_flie
-        self.config_flie = filedb(config, 774, User)
+        self.config_flie = fileDB(config, 774, User)
         # servos init 
         self.camera_servo_pin1 = Servo(PWM(servo_pins[0]))
         self.camera_servo_pin2 = Servo(PWM(servo_pins[1]))   
@@ -81,7 +80,8 @@ class Picarx(object):
         # usage: distance = self.ultrasonic.read()
         tring, echo= ultrasonic_pins
         self.ultrasonic = Ultrasonic(Pin(tring), Pin(echo))
-        
+
+        atexit.register(self.stop)
 
     def set_motor_speed(self,motor,speed):
         # global cali_speed_value,cali_dir_value
@@ -217,78 +217,12 @@ class Picarx(object):
     def get_line_status(self,gm_val_list):
         return str(self.grayscale.get_line_status(gm_val_list))
 
-def Steering_Calib(): # Steering Calibration Check
-    Picarx.set_dir_servo_angle(0)
-    end_time = datetime.now() + timedelta(seconds=3)
-    while datetime.now() < end_time:
-        Picarx.forward(5)
-    Picarx.stop()
-
-def forward_backward():
-    Picarx.set_dir_servo_angle(0)
-    end_time = datetime.now() + timedelta(seconds=2)
-    while datetime.now() < end_time:
-        Picarx.forward(5)
-    Picarx.stop()
-    end_time = datetime.now() + timedelta(seconds=2)
-    while datetime.now() < end_time:
-        Picarx.backward(5)
 
 
-def Parallel_ParkR():
-    Picarx.set_dir_servo_angle(20)
-    end_time = datetime.now() + timedelta(seconds=2)
-    while datetime.now() < end_time:
-        Picarx.backward(2)
-    Picarx.stop()
-    Picarx.set_dir_servo_angle(-40)
-    end_time = datetime.now() + timedelta(seconds=4)
-    while datetime.now() < end_time:
-        Picarx.backward(3)
-    Picarx.stop()
-    Picarx.set_dir_servo_angle(20)
-    end_time = datetime.now() + timedelta(seconds=3)
-    while datetime.now() < end_time:
-        Picarx.forward(3)
-    Picarx.stop()
 
-def Parallel_ParkL():
-    Picarx.set_dir_servo_angle(-20)
-    end_time = datetime.now() + timedelta(seconds=2)
-    while datetime.now() < end_time:
-        Picarx.backward(2)
-    Picarx.stop()
-    Picarx.set_dir_servo_angle(40)
-    end_time = datetime.now() + timedelta(seconds=4)
-    while datetime.now() < end_time:
-        Picarx.backward(3)
-    Picarx.stop()
-    Picarx.set_dir_servo_angle(-20)
-    end_time = datetime.now() + timedelta(seconds=3)
-    while datetime.now() < end_time:
-        Picarx.forward(3)
-    Picarx.stop()
-
-def K_Turn():
-    Picarx.set_dir_servo_angle(-40)
-    end_time = datetime.now() + timedelta(seconds=3)
-    while datetime.now() < end_time:
-        Picarx.forward(3)
-    Picarx.stop()
-    Picarx.set_dir_servo_angle(40)
-    end_time = datetime.now() + timedelta(seconds=3)
-    while datetime.now() < end_time:
-        Picarx.backward(3)
-    Picarx.stop()
-    Picarx.set_dir_servo_angle(0)
-    end_time = datetime.now() + timedelta(seconds=1)
-    while datetime.now() < end_time:
-        Picarx.backward(5)
-    Picarx.stop()
 if __name__ == "__main__":
     px = Picarx()
     px.forward(50)
     time.sleep(1)
     px.stop()
 
-atexit.register(Picarx.stop())
