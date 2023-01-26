@@ -1,4 +1,4 @@
-import picarx_improved.py
+from picarx import picarx_improved
 from datetime import datetime, timedelta
 
 inp=1
@@ -8,15 +8,15 @@ while not inp==0:
     inp=str(input())
     if inp in ['A','a']:
         print('Back and Forth')
-        picarx_improved.forward_backward
+        picarx_improved.Picarx.forward_backward()
     elif inp in ['B', 'b']:
         print('Parallel Park to the Right')
-        picarx_improved.Parallel_ParkR
+        picarx_improved.Picarx.Parallel_ParkR()
     elif inp in ['C', 'c']:
         print('Parallel Park to the Left')
-        picarx_improved.Parallel_ParkL
+        picarx_improved.Picarx.Parallel_ParkL()
     elif inp in ['D', 'd']:
         print('3 Point Turn')
-        picarx_improved.K_Turn
+        picarx_improved.Picarx.K_Turn()
     else:
         inp=0
