@@ -1,14 +1,25 @@
 import time
+import os
+import logging
+import math
+import atexit
+import filedb
+import timer
+from datetime import datetime, timedelta
+
+logging_format = "%( asctime)s: %( message)s"
+#logging.basicConfig(format=logging_format , level=logging.INFO ,datefmt ="%H:%M:%S")
+logging.getLogger ().setLevel(logging.DEBUG)
+logging.debug("There's a problem :(")
+
 try:
-from robot_hat import *
-from robot_hat import reset_mcu
-reset_mcu ()
-time.sleep (0.01)
+    from robot_hat import *
+    from robot_hat import reset_mcu
+    reset_mcu ()
+    time.sleep (0.01)
 except ImportError:
-print ("This computer does not appear to be a PiCar -X system
-(robot_hat is not present). Shadowing hardware calls with
-substitute functions ")
-from sim_robot_hat import *
+    print("This computer does not appear to be a PiCar -X system (robot_hat is not present). Shadowing hardware calls with substitute functions ")
+    from sim_robot_hat import *
 
 # user and User home directory
 User = os.popen('echo ${SUDO_USER:-$LOGNAME}').readline().strip()
@@ -37,7 +48,7 @@ class Picarx(object):
                 ):
 
         # config_flie
-        self.config_flie = fileDB(config, 774, User)
+        self.config_flie = filedb(config, 774, User)
         # servos init 
         self.camera_servo_pin1 = Servo(PWM(servo_pins[0]))
         self.camera_servo_pin2 = Servo(PWM(servo_pins[1]))   
@@ -151,34 +162,40 @@ class Picarx(object):
             # if abs_current_angle >= 0:
             if abs_current_angle > 40:
                 abs_current_angle = 40
-            power_scale = (100 - abs_current_angle) / 100.0 
+            #power_scale = (100 - abs_current_angle) / 100.0
             # print("power_scale:",power_scale)
             if (current_angle / abs_current_angle) > 0:
                 self.set_motor_speed(1, -1*speed)
-                self.set_motor_speed(2, speed * power_scale)
+                self.set_motor_speed(2, speed) #removed power scale
             else:
-                self.set_motor_speed(1, -1*speed * power_scale)
+                self.set_motor_speed(1, -1*speed)# removed power scale
                 self.set_motor_speed(2, speed )
         else:
             self.set_motor_speed(1, -1*speed)
             self.set_motor_speed(2, speed)  
 
     def forward(self,speed):
+        D=0.12065 #distance between wheel in meters
+        L=0.10795 #length from front to rear wheels in meters
         current_angle = self.dir_current_angle
+        X =L* math.tan(40 - current_angle) # Distance from center of turn radius to inner wheel
+        Rr=X
+        Rl=X+D
+        speed_ratio=Rr/Rl
         if current_angle != 0:
             abs_current_angle = abs(current_angle)
             # if abs_current_angle >= 0:
             if abs_current_angle > 40:
                 abs_current_angle = 40
-            power_scale = (100 - abs_current_angle) / 100.0
+            #power_scale = (100 - abs_current_angle) / 100.0
             # print("power_scale:",power_scale)
             if (current_angle / abs_current_angle) > 0:
-                self.set_motor_speed(1, 1*speed * power_scale)
+                self.set_motor_speed(1, 1*speed*speed_ratio) # Removed power scale and added steering speed ratio
                 self.set_motor_speed(2, -speed) 
                 # print("current_speed: %s %s"%(1*speed * power_scale, -speed))
             else:
-                self.set_motor_speed(1, speed)
-                self.set_motor_speed(2, -1*speed * power_scale)
+                self.set_motor_speed(1, speed*-speed_ratio) # added steering speed ratio
+                self.set_motor_speed(2, -1*speed) # removed power scale
                 # print("current_speed: %s %s"%(speed, -1*speed * power_scale))
         else:
             self.set_motor_speed(1, speed)
@@ -200,9 +217,78 @@ class Picarx(object):
     def get_line_status(self,gm_val_list):
         return str(self.grayscale.get_line_status(gm_val_list))
 
+def Steering_Calib(): # Steering Calibration Check
+    Picarx.set_dir_servo_angle(0)
+    end_time = datetime.now() + timedelta(seconds=3)
+    while datetime.now() < end_time:
+        Picarx.forward(5)
+    Picarx.stop()
 
+def forward_backward():
+    Picarx.set_dir_servo_angle(0)
+    end_time = datetime.now() + timedelta(seconds=2)
+    while datetime.now() < end_time:
+        Picarx.forward(5)
+    Picarx.stop()
+    end_time = datetime.now() + timedelta(seconds=2)
+    while datetime.now() < end_time:
+        Picarx.backward(5)
+
+
+def Parallel_ParkR():
+    Picarx.set_dir_servo_angle(20)
+    end_time = datetime.now() + timedelta(seconds=2)
+    while datetime.now() < end_time:
+        Picarx.backward(2)
+    Picarx.stop()
+    Picarx.set_dir_servo_angle(-40)
+    end_time = datetime.now() + timedelta(seconds=4)
+    while datetime.now() < end_time:
+        Picarx.backward(3)
+    Picarx.stop()
+    Picarx.set_dir_servo_angle(20)
+    end_time = datetime.now() + timedelta(seconds=3)
+    while datetime.now() < end_time:
+        Picarx.forward(3)
+    Picarx.stop()
+
+def Parallel_ParkL():
+    Picarx.set_dir_servo_angle(-20)
+    end_time = datetime.now() + timedelta(seconds=2)
+    while datetime.now() < end_time:
+        Picarx.backward(2)
+    Picarx.stop()
+    Picarx.set_dir_servo_angle(40)
+    end_time = datetime.now() + timedelta(seconds=4)
+    while datetime.now() < end_time:
+        Picarx.backward(3)
+    Picarx.stop()
+    Picarx.set_dir_servo_angle(-20)
+    end_time = datetime.now() + timedelta(seconds=3)
+    while datetime.now() < end_time:
+        Picarx.forward(3)
+    Picarx.stop()
+
+def K_Turn():
+    Picarx.set_dir_servo_angle(-40)
+    end_time = datetime.now() + timedelta(seconds=3)
+    while datetime.now() < end_time:
+        Picarx.forward(3)
+    Picarx.stop()
+    Picarx.set_dir_servo_angle(40)
+    end_time = datetime.now() + timedelta(seconds=3)
+    while datetime.now() < end_time:
+        Picarx.backward(3)
+    Picarx.stop()
+    Picarx.set_dir_servo_angle(0)
+    end_time = datetime.now() + timedelta(seconds=1)
+    while datetime.now() < end_time:
+        Picarx.backward(5)
+    Picarx.stop()
 if __name__ == "__main__":
     px = Picarx()
     px.forward(50)
     time.sleep(1)
     px.stop()
+
+atexit.register(Picarx.stop())
