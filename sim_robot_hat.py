@@ -1,3 +1,6 @@
+import smbus, math
+from .i2c import I2C
+
 class Servo():
     MAX_PW = 2500
     MIN_PW = 500
@@ -36,7 +39,8 @@ class Servo():
 
         self.pwm.pulse_width(pwm_value)
 
-class PWM():
+
+class PWM(I2C):
     REG_CHN = 0x20
     REG_FRE = 0x30
     REG_PSC = 0x40
@@ -56,25 +60,21 @@ class PWM():
             else:
                 raise ValueError("PWM channel should be between [P0, P11], not {0}".format(channel))
         try:
-            self.send(0x2C, self.ADDR)
-            self.send(0, self.ADDR)
-            self.send(0, self.ADDR)
+            pass
         except IOError:
             self.ADDR = 0x15
 
         self.debug = debug
         self._debug("PWM address: {:02X}".format(self.ADDR))
         self.channel = channel
-        self.timer = int(channel/4)
-        self.bus = smbus.SMBus(1)
+        self.timer = int(channel / 4)
         self._pulse_width = 0
         self._freq = 50
-        self.freq(50)
 
     def i2c_write(self, reg, value):
         value_h = value >> 8
         value_l = value & 0xff
-        self._debug("i2c write: [0x%02X, 0x%02X, 0x%02X, 0x%02X]"%(self.ADDR, reg, value_h, value_l))
+        self._debug("i2c write: [0x%02X, 0x%02X, 0x%02X, 0x%02X]" % (self.ADDR, reg, value_h, value_l))
         # print("i2c write: [0x%02X, 0x%02X, 0x%02X] to 0x%02X"%(reg, value_h, value_l, self.ADDR))
         self.send([reg, value_h, value_l], self.ADDR)
 
@@ -88,20 +88,20 @@ class PWM():
             # accuracy list
             result_acy = []
             # middle value for equal arr prescaler
-            st = int(math.sqrt(self.CLOCK/self._freq))
+            st = int(math.sqrt(self.CLOCK / self._freq))
             # get -5 value as start
             st -= 5
             # prevent negetive value
             if st <= 0:
                 st = 1
-            for psc in range(st,st+10):
-                arr = int(self.CLOCK/self._freq/psc)
+            for psc in range(st, st + 10):
+                arr = int(self.CLOCK / self._freq / psc)
                 result_ap.append([psc, arr])
-                result_acy.append(abs(self._freq-self.CLOCK/psc/arr))
+                result_acy.append(abs(self._freq - self.CLOCK / psc / arr))
             i = result_acy.index(min(result_acy))
             psc = result_ap[i][0]
             arr = result_ap[i][1]
-            self._debug("prescaler: %s, period: %s"%(psc, arr))
+            self._debug("prescaler: %s, period: %s" % (psc, arr))
             self.prescaler(psc)
             self.period(arr)
 
@@ -111,8 +111,7 @@ class PWM():
         else:
             self._prescaler = int(prescaler[0]) - 1
             reg = self.REG_PSC + self.timer
-            self._debug("Set prescaler to: %s"%self._prescaler)
-            self.i2c_write(reg, self._prescaler)
+            self._debug("Set prescaler to: %s" % self._prescaler)
 
     def period(self, *arr):
         global timer
@@ -121,8 +120,7 @@ class PWM():
         else:
             timer[self.timer]["arr"] = int(arr[0]) - 1
             reg = self.REG_ARR + self.timer
-            self._debug("Set arr to: %s"%timer[self.timer]["arr"])
-            self.i2c_write(reg, timer[self.timer]["arr"])
+            self._debug("Set arr to: %s" % timer[self.timer]["arr"])
 
     def pulse_width(self, *pulse_width):
         if len(pulse_width) == 0:
@@ -141,8 +139,32 @@ class PWM():
             temp = self._pulse_width_percent / 100.0
             # print(temp)
             pulse_width = temp * timer[self.timer]["arr"]
-            self.pulse_width(pulse_width)
 
+
+def test():
+    import time
+    p = PWM(0)
+    # p.debug = 'debug'
+    p.period(1000)
+    p.prescaler(10)
+    # p.pulse_width(2048)
+    while True:
+        for i in range(0, 4095, 10):
+            p.pulse_width(i)
+            print(i)
+            time.sleep(1 / 4095)
+        time.sleep(1)
+        for i in range(4095, 0, -10):
+            p.pulse_width(i)
+            print(i)
+            time.sleep(1 / 4095)
+        time.sleep(1)
+
+
+
+
+if __name__ == '__main__':
+    test2()
 
 class Pin():
     pass
@@ -210,3 +232,96 @@ class Ultrasonic():
             if a != -1:
                 return a
         return -1
+
+
+class fileDB(object):
+    """A file based database.
+
+    A file based database, read and write arguements in the specific file.
+    """
+
+    def __init__(self, db: str, mode: str = None, owner: str = None):
+        '''Init the db_file is a file to save the datas.'''
+
+        self.db = db
+        # Check if db_file is existed, otherwise create one
+        if self.db != None:
+            pass
+        else:
+            raise ValueError('db: Missing file path parameter.')
+
+    def file_check_create(self, file_path: str, mode: str = None, owner: str = None):
+        dir = file_path.rsplit('/', 1)[0]
+        try:
+            if os.path.exists(file_path):
+                if not os.path.isfile(file_path):
+                    print('Could not create file, there is a folder with the same name')
+                    return
+            else:
+                if os.path.exists(dir):
+                    if not os.path.isdir(dir):
+                        print('Could not create directory, there is a file with the same name')
+                        return
+                else:
+                    os.makedirs(file_path.rsplit('/', 1)[0], mode=0o754)
+                    sleep(0.001)
+
+                with open(file_path, 'w') as f:
+                    f.write("# robot-hat config and calibration value of robots\n\n")
+
+            if mode != None:
+                os.popen('sudo chmod %s %s' % (mode, file_path))
+            if owner != None:
+                os.popen('sudo chown -R %s:%s %s' % (owner, owner, file_path.rsplit('/', 1)[0]))
+        except Exception as e:
+            raise (e)
+
+    def get(self, name, default_value=None):
+        """Get value by data's name. Default value is for the arguemants do not exist"""
+        try:
+            conf = open(self.db, 'r')
+            lines = conf.readlines()
+            conf.close()
+            file_len = len(lines) - 1
+            flag = False
+            # Find the arguement and set the value
+            for i in range(file_len):
+                if lines[i][0] != '#':
+                    if lines[i].split('=')[0].strip() == name:
+                        value = lines[i].split('=')[1].replace(' ', '').strip()
+                        flag = True
+            if flag:
+                return value
+            else:
+                return default_value
+        except FileNotFoundError:
+            conf = open(self.db, 'w')
+            conf.write("")
+            conf.close()
+            return default_value
+        except:
+            return default_value
+
+    def set(self, name, value):
+        """Set value by data's name. Or create one if the arguement does not exist"""
+
+        # Read the file
+        conf = open(self.db, 'r')
+        lines = conf.readlines()
+        conf.close()
+        file_len = len(lines) - 1
+        flag = False
+        # Find the arguement and set the value
+        for i in range(file_len):
+            if lines[i][0] != '#':
+                if lines[i].split('=')[0].strip() == name:
+                    lines[i] = '%s = %s\n' % (name, value)
+                    flag = True
+        # If arguement does not exist, create one
+        if not flag:
+            lines.append('%s = %s\n\n' % (name, value))
+
+        # Save the file
+        conf = open(self.db, 'w')
+        conf.writelines(lines)
+        conf.close()
