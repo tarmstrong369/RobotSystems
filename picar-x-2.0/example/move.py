@@ -1,10 +1,10 @@
-from picarx import Picarx
+from picarx import picarx
 import time
 
 
 if __name__ == "__main__":
     try:
-        px = Picarx()
+        px = picarx()
         px.forward(30)
         time.sleep(0.5)
         for angle in range(0,35):
