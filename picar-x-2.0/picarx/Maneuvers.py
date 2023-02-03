@@ -1,4 +1,4 @@
-from picarx_improved import Picarx
+from picarx_bad import Picarx
 import timer
 from datetime import datetime, timedelta
 
@@ -8,67 +8,67 @@ def Steering_Calib(): # Steering Calibration Check
     pcar.set_dir_servo_angle(0)
     end_time = datetime.now() + timedelta(seconds=3)
     while datetime.now() < end_time:
-        pcar.forward(5)
+        pcar.drive(5)
     pcar.stop()
 
 def forward_backward():
     pcar.set_dir_servo_angle(0)
     end_time = datetime.now() + timedelta(seconds=2)
     while datetime.now() < end_time:
-        pcar.forward(5)
+        pcar.drive(5)
     pcar.stop()
     end_time = datetime.now() + timedelta(seconds=2)
     while datetime.now() < end_time:
-        pcar.backward(5)
+        pcar.drive(-5)
 
 
 def Parallel_ParkR():
-    pcar.Picarx.set_dir_servo_angle(20)
+    pcar.turning(20)
     end_time = datetime.now() + timedelta(seconds=2)
     while datetime.now() < end_time:
-        pcar.Picarx.backward(2)
-    pcar.Picarx.stop()
-    pcar.Picarx.set_dir_servo_angle(-40)
+        pcar.drive(-2)
+    pcar.stop()
+    pcar.turning(-40)
     end_time = datetime.now() + timedelta(seconds=4)
     while datetime.now() < end_time:
-        pcar.Picarx.backward(3)
-    pcar.Picarx.stop()
-    pcar.Picarx.set_dir_servo_angle(20)
+        pcar.drive(-3)
+    pcar.stop()
+    pcar.turning(20)
     end_time = datetime.now() + timedelta(seconds=3)
     while datetime.now() < end_time:
-        pcar.Picarx.forward(3)
-    pcar.Picarx.stop()
+        pcar.drive(3)
+    pcar.stop()
 
 def Parallel_ParkL():
-    pcar.Picarx.set_dir_servo_angle(-20)
+    pcar.turning(-20)
     end_time = datetime.now() + timedelta(seconds=2)
     while datetime.now() < end_time:
-        pcar.Picarx.backward(2)
-    pcar.Picarx.stop()
-    pcar.Picarx.set_dir_servo_angle(40)
+        pcar.drive(-2)
+    pcar.stop()
+    pcar.turning(40)
     end_time = datetime.now() + timedelta(seconds=4)
     while datetime.now() < end_time:
-        pcar.Picarx.backward(3)
-    pcar.Picarx.stop()
-    pcar.Picarx.set_dir_servo_angle(-20)
+        pcar.drive(-3)
+    pcar.stop()
+    pcar.turning(-20)
     end_time = datetime.now() + timedelta(seconds=3)
     while datetime.now() < end_time:
-        pcar.Picarx.forward(3)
-    pcar.Picarx.stop()
+        pcar.drive(3)
+    pcar.stop()
 
 def K_Turn():
-    pcar.Picarx.set_dir_servo_angle(-40)
+    pcar.turning(-40)
     end_time = datetime.now() + timedelta(seconds=3)
     while datetime.now() < end_time:
-        pcar.Picarx.forward(3)
-    pcar.Picarx.stop()
-    pcar.Picarx.set_dir_servo_angle(40)
+        pcar.drive(3)
+    pcar.stop()
+    pcar.turning(40)
     end_time = datetime.now() + timedelta(seconds=3)
     while datetime.now() < end_time:
-        pcar.Picarx.backward(3)
-    pcar.Picarx.stop()
-    pcar.Picarx.set_dir_servo_angle(0)
+        pcar.drive(-3)
+    pcar.stop()
+    pcar.turning(0)
     end_time = datetime.now() + timedelta(seconds=1)
     while datetime.now() < end_time:
-        pcar.Picarx.backward(5)
-    pcar.Picarx.stop()
+        pcar.drive(-5)
+    pcar.stop()
