@@ -1,4 +1,4 @@
-from picarx_bad import Picarx
+from picarx_improved import Picarx
 import timer
 from datetime import datetime, timedelta
 

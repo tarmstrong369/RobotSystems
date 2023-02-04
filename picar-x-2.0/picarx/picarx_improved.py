@@ -15,10 +15,6 @@ except ImportError:
     from sim_robot_hat import Pin, PWM, Servo, fileDB
     from sim_robot_hat import Grayscale_Module, Ultrasonic
 
-# Set up logger
-logging_format = "%(asctime)s: %(message)s"
-logging.basicConfig(format=logging_format, level=logging.INFO, datefmt="%H:%M:%S")
-logging.getLogger().setLevel(logging.DEBUG)
 
 # user and User home directory
 User = os.popen('echo ${SUDO_USER:-$LOGNAME}').readline().strip()
@@ -38,6 +34,12 @@ class Picarx(object):
     # grayscale_pins: 3 adc channels
     # ultrasonic_pins: tring, echo
     # config: path of config file
+
+    # Set up logger
+    logging_format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=logging_format, level=logging.INFO, datefmt="%H:%M:%S")
+    logging.getLogger().setLevel(logging.DEBUG)
+    logging.debug('init not working')
     def __init__(self,
                  servo_pins: list = ['P0', 'P1', 'P2'],
                  motor_pins: list = ['D4', 'D5', 'P12', 'P13'],
@@ -88,6 +90,10 @@ class Picarx(object):
         self.wheelwidth = 11 #mm
         self.trackwidth = 13 #mm
 
+    logging_format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=logging_format, level=logging.INFO, datefmt="%H:%M:%S")
+    logging.getLogger().setLevel(logging.DEBUG)
+    logging.debug('setr motor not working')
     def set_motor_speed(self, motor, speed):
         # global cali_speed_value,cali_dir_value
         motor -= 1
