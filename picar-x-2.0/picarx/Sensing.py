@@ -11,7 +11,7 @@ class SenseGS():
 
 
     def sensorGS(self):
-        self.list = [self.chn_0, self.chn_1, self.chn_1]
+        self.list = [self.chn_0, self.chn_1, self.chn_2]
         return self.list
 
 class InterpGS():
@@ -56,4 +56,4 @@ class InterpGS():
 
 class Control():
     def __init__(self):
-        
+
