@@ -24,35 +24,35 @@ class InterpGS():
         self.polar = [0, 0]
         self.intvals = ["", "", ""]
 
-        def GSvals(self):
-            self.vals = self.sensor.sensorGS()
-            for i, val in enumerate(self.vals):
-                if val >= self.darklight:
-                    self.intals[i]="L" #light
-                else:
-                    self.intvals[i]="D" #dark
+    def GSvals(self):
+        self.vals = self.sensor.sensorGS()
+        for i, val in enumerate(self.vals):
+            if val >= self.darklight:
+                self.intals[i]="L" #light
+            else:
+                self.intvals[i]="D" #dark
 
-        def EdgesDetection(self):
-            vals = self.vals
-            if abs(vals[0]-vals[1])>=self.edgedet:
-                self.edges[0]=abs(vals[0]-vals[1])
-                self.polar[0]=int(vals[0]<vals[1])-int(vals[0]>vals[1])
-            else:
-                self.edges[0]=0
-                self.polar[1]=0
-            if abs(vals[1]-vals[2])>=self.edgedet:
-                self.edges[1]=abs(vals[1]-vals[2])
-                self.polar[1]=int(vals[2]<vals[1])-int(vals[2]>vals[1])
-            else:
-                self.edges[1]=0
-                self.polar[1]=0
-        def SelfCorrect(self):
-            if self.polar[0]==self.polar[1]:
-                return 0
-            elif self.polar[0] < self.polar[1]:
-                return -1*abs(self.edges[0]+self.edges[1])/(2*max(self.vals))
-            elif self.polar[1] < self.polar[0]:
-                return abs(self.edges[0]+self.edges[1])/(2*max(self.vals))
+    def EdgesDetection(self):
+        vals = self.vals
+        if abs(vals[0]-vals[1])>=self.edgedet:
+            self.edges[0]=abs(vals[0]-vals[1])
+            self.polar[0]=int(vals[0]<vals[1])-int(vals[0]>vals[1])
+        else:
+            self.edges[0]=0
+            self.polar[1]=0
+        if abs(vals[1]-vals[2])>=self.edgedet:
+            self.edges[1]=abs(vals[1]-vals[2])
+            self.polar[1]=int(vals[2]<vals[1])-int(vals[2]>vals[1])
+        else:
+            self.edges[1]=0
+            self.polar[1]=0
+    def SelfCorrect(self):
+        if self.polar[0]==self.polar[1]:
+            return 0
+        elif self.polar[0] < self.polar[1]:
+            return -1*abs(self.edges[0]+self.edges[1])/(2*max(self.vals))
+        elif self.polar[1] < self.polar[0]:
+            return abs(self.edges[0]+self.edges[1])/(2*max(self.vals))
 
 class Control():
     def __init__(self):
